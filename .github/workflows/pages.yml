@@ -8,7 +8,7 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: write # JamesIves只需要这个，删掉pages、id‑token那两行！
+  contents: write 
 
 jobs:
   deploy:
