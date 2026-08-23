@@ -1,0 +1,7 @@
+{
+  "keyStatsExe": "App/KeyStats.exe",
+  "uploadIntervalMinutes": 5,
+  "supabaseUrl": "https://igjboahicllpsjulswms.supabase.co",
+  "publishableKey": "sb_publishable_zRIG5lCCRWjTOPABvvSCCw_1oV9OyzF",
+  "dataDir": ""
+}

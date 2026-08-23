@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>手护 · 手部健康监测</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="config.js"></script>
+</head>
+<body>
+  <!-- ======= 顶栏 ======= -->
+  <header class="topbar" id="topbar" hidden>
+    <div class="topbar-inner">
+      <div class="brand">
+        <span class="brand-mark"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14l1.6-5.2A2 2 0 0 1 7.5 7.4c.8 0 1.5.4 1.9 1.1L11 11V4.5C11 3.7 11.7 3 12.5 3S14 3.7 14 4.5V11h.5c.6 0 1.1.2 1.5.6l2-3.1c.3-.5.9-.7 1.4-.5.6.2 1 .8.9 1.4L19 13a6 6 0 0 1-6 5h-2a6 6 0 0 1-5-2.8L4 14z"/></svg></span>
+        <span class="brand-text">手护</span>
+      </div>
+      <nav class="top-nav">
+        <button class="nav-link active" data-view="dashboard">健康看板</button>
+        <button class="nav-link" data-view="bind">绑定设备</button>
+      </nav>
+      <div class="top-account">
+        <span class="account-id" id="accountId"></span>
+        <button class="btn btn-ghost" id="btnLogout">退出</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ======= 登录视图 ======= -->
+  <section class="view" id="view-login">
+    <div class="login-card card">
+      <div class="login-hero">
+        <svg viewBox="0 0 64 64" width="64" height="64" fill="none" stroke="#3b82f6" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M14 43l4-14a6 6 0 0 1 11.5-3L34 34V15a4 4 0 0 1 8 0v20h1a4 4 0 0 1 3 1.5l5-6a4 4 0 0 1 6.6 4L50 46a12 12 0 0 1-10 5h-3a14 14 0 0 1-12-6l-8-10z"/></svg>
+        <h1>手护我手 · 键鼠健康监测</h1>
+        <p class="muted">追踪你每天的手部键鼠使用强度，用数据提醒你适时放松。</p>
+      </div>
+      <form id="loginForm" class="stack">
+        <label class="field">
+          <span class="field-label">账号 ID</span>
+          <input type="text" id="loginId" placeholder="输入你的账号 ID" autocomplete="off" />
+        </label>
+        <p class="hint">当前为临时登录（占位），未来将接入微信小程序登录授权。</p>
+        <button type="submit" class="btn btn-primary btn-block">进入看板</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- ======= 看板视图 ======= -->
+  <section class="view" id="view-dashboard" hidden>
+    <div class="container">
+
+      <section class="panel">
+        <div class="panel-head">
+          <span class="ph-ico"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14l1.6-5.2A2 2 0 0 1 7.5 7.4c.8 0 1.5.4 1.9 1.1L11 11V4.5C11 3.7 11.7 3 12.5 3S14 3.7 14 4.5V11h.5c.6 0 1.1.2 1.5.6l2-3.1c.3-.5.9-.7 1.4-.5.6.2 1 .8.9 1.4L19 13a6 6 0 0 1-6 5h-2a6 6 0 0 1-5-2.8L4 14z"/></svg></span>
+          <div>
+            <h2>今日概览</h2>
+            <p>最近一次设备上报的手部使用强度</p>
+          </div>
+          <div class="panel-actions">
+            <label class="device-select" title="切换查看设备">
+              <span class="ds-label"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 7h6M10 13l1.5 1.5L15 11"/></svg></span>
+              <select id="deviceSelect"></select>
+            </label>
+          </div>
+        </div>
+        <div class="card summary">
+          <div class="stat-grid" id="statGrid"></div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <span class="ph-ico"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5M8 15V9M12 19V6M16 15V9M20 19V3"/></svg></span>
+          <div>
+            <h2>使用速率</h2>
+            <p>按当天多次上报的时间差与数值差计算的操作强度变化</p>
+          </div>
+          <span class="chip" id="rateRange">最近 1 天</span>
+        </div>
+        <div class="card chart-card">
+          <div class="card-h">
+            <h3>当日按键/点击速率</h3>
+            <span class="chip">基于相邻两次上报的增量</span>
+          </div>
+          <div class="chart" id="chartRate"></div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <span class="ph-ico"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l5-6 4 3 6-8"/><path d="M15 6h6v6"/></svg></span>
+          <div>
+            <h2>使用趋势</h2>
+            <p>近两周的按键、点击与移动变化</p>
+          </div>
+        </div>
+        <div class="chart-grid">
+          <div class="card chart-card">
+            <div class="card-h">
+              <h3>日均按键强度</h3>
+              <span class="chip" id="kpsRange"></span>
+            </div>
+            <div class="chart" id="chartKeys"></div>
+          </div>
+          <div class="card chart-card">
+            <div class="card-h">
+              <h3>鼠标点击量</h3>
+              <span class="chip">最近 14 天</span>
+            </div>
+            <div class="chart" id="chartClicks"></div>
+          </div>
+          <div class="card chart-card chart-wide">
+            <div class="card-h">
+              <h3>鼠标移动 · 滚轮</h3>
+              <span class="chip">月度累计</span>
+            </div>
+            <div class="chart" id="chartMove"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <span class="ph-ico"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.4 4 5 .8-3.6 3.5.9 5L12 14.5 7.3 16.3l.9-5L4.6 7.8l5-.8z"/></svg></span>
+          <div>
+            <h2>健康建议</h2>
+            <p>基于你的使用强度生成，仅供参考</p>
+          </div>
+        </div>
+        <div class="card advice">
+          <ul class="advice-list" id="adviceList"></ul>
+        </div>
+      </section>
+
+    </div>
+  </section>
+
+  <!-- ======= 绑定设备视图 ======= -->
+  <section class="view" id="view-bind" hidden>
+    <div class="container">
+
+      <section class="panel">
+        <div class="panel-head">
+          <span class="ph-ico"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 7h6M10 13l1.5 1.5L15 11"/></svg></span>
+          <div>
+            <h2>我的设备</h2>
+            <p>本账号已绑定的设备，支持一拖多</p>
+          </div>
+        </div>
+        <div class="card">
+          <ul class="device-list" id="deviceList">
+            <li class="empty muted" id="deviceEmpty">暂无绑定设备。在电脑的绑定页查看 6 位验证码，输入下方即可绑定。</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="panel panel-narrow">
+        <div class="panel-head">
+          <span class="ph-ico"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></span>
+          <div>
+            <h2>绑定新设备</h2>
+            <p>输入电脑绑定页上的验证码完成关联</p>
+          </div>
+        </div>
+        <div class="card">
+          <form id="bindForm" class="stack">
+            <label class="field">
+              <span class="field-label">6 位验证码</span>
+              <div class="code-input" id="codeInput">
+                <span></span><span></span><span></span><span></span><span></span><span></span>
+                <input type="text" id="bindCode" maxlength="6" autocomplete="off" inputmode="text" aria-label="6 位验证码" />
+              </div>
+            </label>
+            <p class="hint">验证码 5 分钟内有效。绑定成功后，电脑端将收到绑定结果。</p>
+            <button type="submit" class="btn btn-primary btn-block">绑定设备</button>
+          </form>
+        </div>
+      </section>
+
+    </div>
+  </section>
+
+  <div class="toast" id="toast" hidden></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="app.js"></script>
+</body>
+</html>
