@@ -2,8 +2,14 @@ name: Deploy Pages
 on:
   push:
     branches: [ main ]
+
+concurrency:
+  group: "pages-deploy"
+  cancel-in-progress: true
+
 permissions:
-  contents: write
+  contents: write # JamesIves只需要这个，删掉pages、id‑token那两行！
+
 jobs:
   deploy:
     runs-on: ubuntu‑latest
@@ -12,5 +18,5 @@ jobs:
       - name: Deploy web folder
         uses: JamesIves/github‑pages‑deploy‑action@v4
         with:
-          folder: web   
+          folder: web
           branch: gh‑pages
