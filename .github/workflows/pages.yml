@@ -1,0 +1,16 @@
+name: Deploy Pages
+on:
+  push:
+    branches: [ main ]
+permissions:
+  contents: write
+jobs:
+  deploy:
+    runs-on: ubuntu‑latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Deploy web folder
+        uses: JamesIves/github‑pages‑deploy‑action@v4
+        with:
+          folder: web   
+          branch: gh‑pages
