@@ -136,8 +136,7 @@
 
     const kps = day.key_presses || 0;
     const clicks = (day.left_clicks || 0) + (day.right_clicks || 0) + (day.middle_clicks || 0) + (day.side_back_clicks || 0) + (day.side_forward_clicks || 0);
-    const moveM = Math.round((day.mouse_distance || 0) / 1000); // 像素 → 千像素
-    const scrollM = Math.round((day.scroll_distance || 0) / 1000);
+    const moveM = (day.mouse_distance || 0) / 20000; // 像素 → 米（与 KeyStats 一致）
     const peak = Math.max(day.peak_kps || 0, day.peak_cps || 0);
 
     let advice = [];
@@ -145,7 +144,7 @@
     else if (kps > 6000) advice.push({ lv: "中", msg: "按键强度适中，留意是否有手腕酸胀感。" });
     else if (kps > 0) advice.push({ lv: "低", msg: "按键强度处于舒适区间，继续保持劳逸节奏。" });
 
-    if (moveM > 600) advice.push({ lv: "高", msg: "鼠标移动距离较大，注意调整握姿，避免长时间悬腕。" });
+    if (moveM > 15) advice.push({ lv: "高", msg: "鼠标移动距离较大，注意调整握姿，避免长时间悬腕。" });
 
     if (peak >= 6) advice.push({ lv: "高", msg: "存在高频连点（峰值 " + peak.toFixed(1) + " cps），短时高负荷操作后请放松手部。" });
     else if (peak > 0) advice.push({ lv: "低", msg: "操作频率平稳，腕部压力在安全范围内。" });
@@ -182,11 +181,11 @@
         statCard("峰值效率", "0", "KPS / CPS", ICONS.scroll);
     } else {
       const clicks = (day.left_clicks || 0) + (day.right_clicks || 0) + (day.middle_clicks || 0) + (day.side_back_clicks || 0) + (day.side_forward_clicks || 0);
-      const moveM = Math.round((day.mouse_distance || 0) / 1000);
+      const moveM = (day.mouse_distance || 0) / 20000;
       statHTML =
         statCard("今日按键", fmt(day.key_presses), "峰值 " + fmt(day.peak_kps || 0) + " KPS", ICONS.keys) +
         statCard("鼠标点击", fmt(clicks), "左键 " + fmt(day.left_clicks || 0), ICONS.clicks) +
-        statCard("移动距离", moveM + " m", "滚轮 " + fmt(day.scroll_distance || 0) + " px", ICONS.move) +
+        statCard("移动距离", moveM.toFixed(1) + " m", "滚轮 " + fmt(day.scroll_distance || 0) + " px", ICONS.move) +
         statCard("峰值效率", (day.peak_kps || 0).toFixed(1) + " KPS", "CPS " + (day.peak_cps || 0).toFixed(1), ICONS.scroll);
     }
     $("#statGrid").innerHTML = statHTML;
@@ -195,7 +194,7 @@
     const labels = last14.map(function (d) { return d.stats_date.slice(5); }); // MM-DD
     const keysV = last14.map(function (d) { return d.key_presses || 0; });
     const clickV = last14.map(function (d) { return (d.left_clicks || 0) + (d.right_clicks || 0) + (d.middle_clicks || 0) + (d.side_back_clicks || 0) + (d.side_forward_clicks || 0); });
-    const moveV = last14.map(function (d) { return d.mouse_distance || 0; });
+    const moveV = last14.map(function (d) { return (d.mouse_distance || 0) / 20000; }); // 米
 
     renderLine($("#chartKeys"), labels, keysV);
     renderBars($("#chartClicks"), labels, clickV);
