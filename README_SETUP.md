@@ -9,7 +9,9 @@
 ├── web/
 │   ├── index.html          # 手部健康主题网站（登录/绑定/可视化）
 │   ├── style.css
-│   ├── app.js              # Supabase 交互 + 图表渲染
+│   ├── app.js              # Supabase 交互 + 图表渲染 + 问卷交互
+│   ├── questionnaire.js    # 手部自评问卷题库与评分规则（23 题 / 4 组）
+│   ├── assets/q21-thumb-wrist-steps.png  # 第 21 题自测姿势图
 │   └── config.js           # Supabase 项目 URL 与 Publishable Key
 ├── config.go / main.go / uploader.go /
 │   supabase.go / bind.go   # 启动器源码（Go 标准库，无第三方依赖、无需 C 编译器）
@@ -38,6 +40,8 @@
   - `upload_snapshot` 上传健康快照（校验设备密钥 + 已绑定）
   - `get_device_status` 查询设备是否已绑定
   - `get_user_devices` / `get_health_snapshots` 网页端数据源
+  - `submit_assessment` 提交问卷结果（网页「手部评估」页）
+  - `get_latest_assessment` / `get_assessments` 读取最近一次与历史评估
 - **占位说明**：账号体系未接入，`user_id` 为用户输入的 id（微信 openid 占位）。正式接入微信小程序后，应把 `get_health_snapshots` / `get_user_devices` 等函数中的 `p_user_id` 改为从 `auth.uid()` 读取，建立 openid 映射，防止伪造他人数据。
 - 密钥 `device_secret` 由启动器随机生成并仅本地保存（`config.json` 的 `deviceSecret`）；服务端仅校验匹配，无法反推。
 
@@ -56,3 +60,27 @@
 - 已绑定设备每 5 分钟读取 `%LOCALAPPDATA%\KeyStats\daily_stats.json`，剔除 `appStats` 后，
   调用 `upload_snapshot(device_uuid, device_secret, ...)` 追加一条时间序列快照到 `health_snapshots`。
 - 未绑定（`isBound=false`）不上传；`config.json` 每周期重新读取，绑定时即时生效。
+
+## 手部评估问卷
+
+题库与评分规则来自「舒腕知护」桌面版（`resources/app.asar` 内的 `questionnaire.js`），已完整移植到
+`web/questionnaire.js`，与桌面版的 23 道题、4 个分组、评分口径完全一致：
+
+| 项 | 规则 |
+|---|---|
+| 分组 | ① 认识你的双手 Q1–Q6　② 了解日常用手习惯 Q7–Q11　③ 听听身体的感受 Q12–Q21　④ 看看日常活动的变化 Q22–Q23 |
+| 症状与功能 | Q12–Q21（10 项）+ Q22（9 个子项），每题 0–4 分，合计 **0–76** |
+| 日常负荷 | Q7 选中项数 + Q8/Q9/Q10 权重（0/1/2/3）+ Q11 选中项数，合计 **0–16** |
+| 基准等级 | ≤38 低风险，39–57 中风险，≥58 高风险 |
+| 等级修正 | 日常负荷 ≥8 分时风险上调一级（封顶高风险）；4–7 分只提示不改等级 |
+| 不参与计分 | Q23（仅作补充描述）、Q1–Q6（背景信息，用于提示文案） |
+| 条件题 | Q2 仅在 Q1 选择「女」时出现 |
+| 必答 | Q21 为必答自测题，附姿势图 `assets/q21-thumb-wrist-steps.png` 与三步说明 |
+
+交互：分 4 组逐步填写，跨越「上一步/继续」或「提交」时校验本组/全部题目；选项点选即存草稿到
+`localStorage`（键 `handguard_assess_<账号ID>`），提交成功后清草稿并通过 `submit_assessment` 落库。
+看板「手部评估」卡片展示最近一次结果（等级、0–76、0–16、基准等级、提示文案）。
+
+题库改动的落点只有一处：`web/questionnaire.js`（`docs/` 为发布副本，需同步）。若评分规则调整，
+`supabase/schema.sql` 中 `assessments` 表的 `core_score` / `exposure` / `risk_level` 由前端传入，
+服务端不再复算，因此前后端只需保持 schema 列不变。

@@ -197,6 +197,17 @@ body {
 .device-meta { display: flex; align-items: center; gap: 8px; font-size: 13px; }
 .device-meta b { font-weight: 600; }
 
+/* Tooltip（data-tip 事件委托，由 app.js 创建 #ui-tip） */
+#ui-tip {
+  position: fixed; z-index: 100; pointer-events: none;
+  max-width: 280px; padding: 7px 11px; border-radius: 8px;
+  background: rgba(20, 24, 32, .95); color: #f2f4f8;
+  border: 1px solid rgba(255, 255, 255, .08);
+  font-size: 12.5px; line-height: 1.45; white-space: normal;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, .2);
+}
+[data-tip] { cursor: help; }
+
 /* Toast */
 .toast {
   position: fixed; left: 50%; top: 18px; transform: translateX(-50%); z-index: 50;
@@ -205,6 +216,153 @@ body {
 }
 .toast.ok { background: var(--success); color: #fff; }
 .toast.err { background: var(--danger); color: #fff; }
+
+/* ==========================================================================
+   手部评估问卷
+   ========================================================================== */
+
+/* 布局：左侧步骤栏 + 右侧题面 */
+.assess-layout { display: grid; grid-template-columns: 232px 1fr; gap: 20px; align-items: start; }
+.assess-side { position: sticky; top: 76px; }
+.steps { list-style: none; margin: 0 0 14px; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.step {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  font: inherit; font-size: 13.5px; text-align: left; cursor: pointer;
+  padding: 9px 10px; border-radius: 9px; color: var(--text-2);
+  background: none; border: 1px solid transparent;
+}
+.step:hover { background: var(--surface-2); color: var(--text); }
+.step.on { background: var(--primary-soft); border-color: transparent; color: var(--primary); font-weight: 550; }
+.step.done .step-no { background: var(--success); color: #fff; border-color: var(--success); }
+.step-no {
+  display: grid; place-items: center; flex-shrink: 0;
+  width: 22px; height: 22px; border-radius: 50%; font-size: 12px; font-variant-numeric: tabular-nums;
+  border: 1px solid var(--line); color: var(--text-2); background: var(--surface);
+}
+.step.on .step-no { border-color: var(--primary); color: var(--primary); }
+.step.on.done .step-no { color: #fff; }
+.prog { height: 4px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
+.prog span { display: block; height: 100%; background: var(--primary); transition: width .25s; }
+.assess-note { font-size: 12px; line-height: 1.65; color: var(--text-2); margin: 12px 0 0; }
+
+/* 题面卡片 */
+.assess-card { padding: 24px 26px 26px; }
+.assess-card h2 { margin: 6px 0 4px; font-size: 18px; letter-spacing: -.2px; }
+.eyebrow {
+  font-size: 11px; letter-spacing: .09em; text-transform: uppercase;
+  color: var(--text-2); font-weight: 600;
+}
+.form-error {
+  margin: 14px 0 4px; padding: 9px 12px; border-radius: 8px; font-size: 12.5px;
+  color: var(--danger); background: rgba(214, 69, 69, .08);
+  border: 1px solid rgba(214, 69, 69, .22);
+}
+
+/* 单题 */
+.q { padding: 18px 0; border-top: 1px solid var(--line); }
+.q:first-of-type { border-top: none; }
+.q.bad { background: rgba(214, 69, 69, .04); border-radius: 10px; padding: 18px 14px; margin: 6px -14px; }
+.q-title { margin: 0 0 10px; font-size: 14.5px; font-weight: 600; line-height: 1.5; }
+.q-title small {
+  margin-left: 8px; font-weight: 400; font-size: 11px; color: var(--text-2);
+  background: var(--surface-2); padding: 1px 7px; border-radius: 999px;
+}
+.qn {
+  display: inline-block; min-width: 22px; margin-right: 8px;
+  font: 600 12px Consolas, Menlo, monospace; color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+}
+.q-note { margin: -4px 0 10px; font-size: 12.5px; color: var(--text-2); line-height: 1.6; }
+.q-note.warn { color: #a8792a; }
+
+/* 选项 */
+.opts { display: flex; flex-wrap: wrap; gap: 8px; }
+.opt {
+  font: inherit; font-size: 13px; cursor: pointer; text-align: left;
+  padding: 8px 13px; border-radius: 8px;
+  border: 1px solid var(--line); background: var(--surface); color: var(--text);
+  transition: background .12s, border-color .12s;
+}
+.opt:hover { border-color: var(--primary); color: var(--primary); }
+.opt.on {
+  background: var(--primary); border-color: var(--primary); color: #fff; font-weight: 550;
+}
+.opts-mtx { flex: 1 1 auto; }
+
+/* 第 22 题矩阵：每行一个活动，右侧五档 */
+.mtx-row {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+  padding: 9px 0; border-bottom: 1px dashed var(--line);
+}
+.mtx-row:last-child { border-bottom: none; }
+.mtx-label { margin: 0; flex: 1 1 240px; font-size: 13px; color: var(--text); }
+
+/* 第 21 题姿势图 */
+.q21 {
+  margin: 4px 0 14px; padding: 0;
+  border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden;
+  background: var(--surface-2);
+}
+.q21-img { position: relative; background: #fff; }
+.q21-img img { display: block; width: 100%; height: auto; }
+.q21-img span {
+  position: absolute; right: 10px; bottom: 10px;
+  font-size: 11px; color: var(--text-2); background: rgba(255, 255, 255, .9);
+  padding: 2px 8px; border-radius: 999px;
+}
+.q21 figcaption { padding: 14px 16px 16px; }
+.q21 ol { margin: 6px 0 10px; padding-left: 18px; }
+.q21 li { font-size: 13px; margin-bottom: 6px; }
+.q21 li strong { font-weight: 600; }
+.q21 li p { margin: 2px 0 0; color: var(--text-2); font-size: 12.5px; line-height: 1.55; }
+.q21-safety { margin: 0; font-size: 12px; color: var(--text-2); line-height: 1.6; }
+
+/* 底部操作 */
+.q-actions {
+  display: flex; align-items: center; gap: 12px;
+  margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--line);
+}
+.q-actions .btn-primary { margin-left: auto; }
+.q-count { font-size: 12px; color: var(--text-2); }
+
+/* 看板里的评估摘要 */
+.assess-empty { padding: 22px 24px; display: flex; flex-wrap: wrap; align-items: center; gap: 16px; }
+.assess-empty p { margin: 0; flex: 1 1 320px; font-size: 13px; line-height: 1.6; }
+.assess-res { display: flex; flex-direction: column; }
+.res-hero { padding: 20px 24px 18px; border-bottom: 1px solid var(--line); position: relative; }
+.res-lv { font-size: 19px; font-weight: 650; letter-spacing: -.2px; }
+.res-hero p { margin: 6px 0 0; font-size: 13px; color: var(--text-2); line-height: 1.6; max-width: 620px; }
+.res-date { position: absolute; right: 24px; top: 22px; font-size: 12px; color: var(--text-2); }
+.res-hero.lv-0 .res-lv { color: var(--success); }
+.res-hero.lv-1 .res-lv { color: #c98a1e; }
+.res-hero.lv-2 .res-lv { color: var(--danger); }
+.res-scores { display: grid; grid-template-columns: repeat(3, 1fr); }
+.res-scores > div { padding: 16px 24px; }
+.res-scores > div + div { border-left: 1px solid var(--line); }
+.res-scores b { font-size: 22px; font-weight: 650; letter-spacing: -.5px; display: inline-block; }
+.res-scores small { font-size: 12px; color: var(--text-2); margin-left: 3px; }
+.res-scores span { display: block; margin-top: 3px; font-size: 12px; color: var(--text-2); }
+.res-warn { list-style: none; margin: 0; padding: 4px 24px 0; }
+.res-warn li {
+  font-size: 12.5px; color: #a8792a; padding: 7px 0; line-height: 1.55;
+  border-top: 1px dashed var(--line);
+}
+.res-foot {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 14px;
+  padding: 14px 24px 18px; border-top: 1px solid var(--line);
+}
+.res-foot .muted { font-size: 12px; flex: 1 1 260px; }
+
+@media (max-width: 900px) {
+  .assess-layout { grid-template-columns: 1fr; }
+  .assess-side { position: static; }
+  .steps { flex-direction: row; overflow-x: auto; padding-bottom: 4px; }
+  .step { flex: 0 0 auto; white-space: nowrap; }
+  .res-scores { grid-template-columns: 1fr; }
+  .res-scores > div + div { border-left: none; border-top: 1px solid var(--line); }
+  .assess-card { padding: 20px 18px 22px; }
+  .mtx-label { flex-basis: 100%; }
+}
 
 @media (max-width: 760px) {
   .stat-grid { grid-template-columns: 1fr; }

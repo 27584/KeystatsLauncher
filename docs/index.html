@@ -16,12 +16,13 @@
         <span class="brand-text">手护</span>
       </div>
       <nav class="top-nav">
-        <button class="nav-link active" data-view="dashboard">健康看板</button>
-        <button class="nav-link" data-view="bind">绑定设备</button>
+        <button class="nav-link active" data-view="dashboard" data-tip="查看综合数据看板与健康建议">健康看板</button>
+        <button class="nav-link" data-view="assessment" data-tip="填写手部自评问卷，了解近期的症状与负荷">手部评估</button>
+        <button class="nav-link" data-view="bind" data-tip="绑定新设备或查看已绑定的设备">绑定设备</button>
       </nav>
       <div class="top-account">
-        <span class="account-id" id="accountId"></span>
-        <button class="btn btn-ghost" id="btnLogout">退出</button>
+        <span class="account-id" id="accountId" data-tip="当前登录账号 ID（临时登录）"></span>
+        <button class="btn btn-ghost" id="btnLogout" data-tip="退出当前账号">退出</button>
       </div>
     </div>
   </header>
@@ -53,11 +54,11 @@
         <div class="panel-head">
           <span class="ph-ico"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14l1.6-5.2A2 2 0 0 1 7.5 7.4c.8 0 1.5.4 1.9 1.1L11 11V4.5C11 3.7 11.7 3 12.5 3S14 3.7 14 4.5V11h.5c.6 0 1.1.2 1.5.6l2-3.1c.3-.5.9-.7 1.4-.5.6.2 1 .8.9 1.4L19 13a6 6 0 0 1-6 5h-2a6 6 0 0 1-5-2.8L4 14z"/></svg></span>
           <div>
-            <h2>今日概览</h2>
+            <h2 data-tip="最近一次设备上报的键鼠使用强度统计">今日概览</h2>
             <p>最近一次设备上报的手部使用强度</p>
           </div>
           <div class="panel-actions">
-            <label class="device-select" title="切换查看设备">
+            <label class="device-select" data-tip="切换查看不同设备的数据">
               <span class="ds-label"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 7h6M10 13l1.5 1.5L15 11"/></svg></span>
               <select id="deviceSelect"></select>
             </label>
@@ -72,7 +73,7 @@
         <div class="panel-head">
           <span class="ph-ico"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5M8 15V9M12 19V6M16 15V9M20 19V3"/></svg></span>
           <div>
-            <h2>使用速率</h2>
+            <h2 data-tip="根据当天多次上报的差值 ÷ 时间差估算的操作强度">使用速率</h2>
             <p>按当天多次上报的时间差与数值差计算的操作强度变化</p>
           </div>
           <span class="chip" id="rateRange">最近 1 天</span>
@@ -90,7 +91,7 @@
         <div class="panel-head">
           <span class="ph-ico"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l5-6 4 3 6-8"/><path d="M15 6h6v6"/></svg></span>
           <div>
-            <h2>使用趋势</h2>
+            <h2 data-tip="近两周的按键、点击与移动距离变化">使用趋势</h2>
             <p>近两周的按键、点击与移动变化</p>
           </div>
         </div>
@@ -121,9 +122,23 @@
 
       <section class="panel">
         <div class="panel-head">
+          <span class="ph-ico"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="17" rx="3"/><rect x="9" y="2" width="6" height="4" rx="1"/><path d="M9 11h6m-6 4h4"/></svg></span>
+          <div>
+            <h2 data-tip="手部重复性劳损自评问卷的最近一次结果">手部评估</h2>
+            <p>症状、功能与日常负荷的综合自评，仅供参考</p>
+          </div>
+          <div class="panel-actions">
+            <button class="btn btn-ghost" data-act="go-assess" data-tip="打开问卷，重新做一次自评">填写问卷</button>
+          </div>
+        </div>
+        <div class="card" id="assessSummary"></div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
           <span class="ph-ico"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.4 4 5 .8-3.6 3.5.9 5L12 14.5 7.3 16.3l.9-5L4.6 7.8l5-.8z"/></svg></span>
           <div>
-            <h2>健康建议</h2>
+            <h2 data-tip="基于你的使用强度自动生成，仅供参考">健康建议</h2>
             <p>基于你的使用强度生成，仅供参考</p>
           </div>
         </div>
@@ -135,6 +150,13 @@
     </div>
   </section>
 
+  <!-- ======= 手部评估视图 ======= -->
+  <section class="view" id="view-assessment" hidden>
+    <div class="container">
+      <div id="assessBody"></div>
+    </div>
+  </section>
+
   <!-- ======= 绑定设备视图 ======= -->
   <section class="view" id="view-bind" hidden>
     <div class="container">
@@ -143,7 +165,7 @@
         <div class="panel-head">
           <span class="ph-ico"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 7h6M10 13l1.5 1.5L15 11"/></svg></span>
           <div>
-            <h2>我的设备</h2>
+            <h2 data-tip="本账号已绑定的设备，支持一拖多">我的设备</h2>
             <p>本账号已绑定的设备，支持一拖多</p>
           </div>
         </div>
@@ -158,7 +180,7 @@
         <div class="panel-head">
           <span class="ph-ico"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></span>
           <div>
-            <h2>绑定新设备</h2>
+            <h2 data-tip="输入电脑绑定页显示的 6 位验证码完成关联">绑定新设备</h2>
             <p>输入电脑绑定页上的验证码完成关联</p>
           </div>
         </div>
@@ -166,13 +188,13 @@
           <form id="bindForm" class="stack">
             <label class="field">
               <span class="field-label">6 位验证码</span>
-              <div class="code-input" id="codeInput">
+              <div class="code-input" id="codeInput" data-tip="输入电脑绑定页显示的 6 位验证码，输入会自动忽略空格">
                 <span></span><span></span><span></span><span></span><span></span><span></span>
                 <input type="text" id="bindCode" maxlength="6" autocomplete="off" inputmode="text" aria-label="6 位验证码" />
               </div>
             </label>
             <p class="hint">验证码 5 分钟内有效。绑定成功后，电脑端将收到绑定结果。</p>
-            <button type="submit" class="btn btn-primary btn-block">绑定设备</button>
+            <button type="submit" class="btn btn-primary btn-block" data-tip="用验证码将当前账号与设备绑定">绑定设备</button>
           </form>
         </div>
       </section>
@@ -183,6 +205,7 @@
   <div class="toast" id="toast" hidden></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="questionnaire.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

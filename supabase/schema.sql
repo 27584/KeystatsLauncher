@@ -253,9 +253,104 @@ as $$
 $$;
 
 -- ---------------------------------------------------------------------------
+-- 问卷评估表：一次提交一行（题库与算分规则见 web/questionnaire.js）
+--  answers 存原始作答（题号 → 选项下标 / 多选数组 / 矩阵数组），
+--  同时冗余 core/exposure/risk 等派生值，便于直接查询与统计。
+-- ---------------------------------------------------------------------------
+create table if not exists public.assessments (
+    id          bigint generated always as identity primary key,
+    user_id     text not null references public.users(id) on delete cascade,
+    device_uuid uuid references public.devices(device_uuid) on delete set null,
+    created_at  timestamptz not null default now(),
+    answers     jsonb not null,
+    core_score  int not null,                         -- 症状与功能得分，0–76
+    exposure    int not null,                          -- 日常负荷得分，0–16
+    base_risk   int not null,                          -- 得分决定的基准等级 0/1/2
+    risk_level  int not null,                          -- 负荷修正后的最终等级 0/1/2
+    upgraded    boolean not null default false,        -- 是否被负荷上调
+    warnings    jsonb not null default '[]'::jsonb,    -- 提示文案
+    client_tag  text                                   -- 来源标记（如 web）
+);
+
+create index if not exists assessments_user_created_idx
+    on public.assessments (user_id, created_at desc);
+
+comment on table public.assessments is '手部重复性劳损自评问卷结果，一次提交追加一行。';
+
+alter table public.assessments enable row level security;
+
+do $$
+begin
+    if not exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'assessments' and policyname = 'block_direct_assessments') then
+        execute 'create policy "block_direct_assessments" on public.assessments for all to anon using (false) with check (false)';
+    end if;
+end
+$$;
+
+-- 8) 提交一份问卷结果（网页端评估提交）
+--    入参：p_user_id、原始作答、各派生得分、可选设备与来源标记
+--    返回：新记录 id
+create or replace function public.submit_assessment(
+    p_user_id text,
+    p_answers jsonb,
+    p_core_score int,
+    p_exposure int,
+    p_base_risk int,
+    p_risk_level int,
+    p_upgraded boolean,
+    p_warnings jsonb,
+    p_device_uuid uuid default null,
+    p_client_tag text default 'web'
+)
+returns bigint
+language plpgsql volatile security definer set search_path = public
+as $$
+declare
+    v_id bigint;
+begin
+    -- 用户占位：不存在则创建（账号体系接入前，user_id 即登录 id）
+    insert into public.users(id) values (p_user_id) on conflict (id) do nothing;
+
+    insert into public.assessments (
+        user_id, device_uuid, answers, core_score, exposure,
+        base_risk, risk_level, upgraded, warnings, client_tag
+    ) values (
+        p_user_id, p_device_uuid, p_answers, p_core_score, p_exposure,
+        p_base_risk, p_risk_level, coalesce(p_upgraded, false),
+        coalesce(p_warnings, '[]'::jsonb), coalesce(p_client_tag, 'web')
+    )
+    returning id into v_id;
+
+    return v_id;
+end;
+$$;
+
+-- 9) 查询某用户最近一次评估（网页端看板展示）
+create or replace function public.get_latest_assessment(p_user_id text)
+returns setof public.assessments
+language sql stable security definer set search_path = public
+as $$
+    select a.* from public.assessments a
+     where a.user_id = p_user_id
+     order by a.created_at desc
+     limit 1;
+$$;
+
+-- 10) 查询某用户近 N 天评估历史（默认 180 天，供后续「评估记录」页使用）
+create or replace function public.get_assessments(p_user_id text, p_days int default 180)
+returns setof public.assessments
+language sql stable security definer set search_path = public
+as $$
+    select a.* from public.assessments a
+     where a.user_id = p_user_id
+       and a.created_at >= (now() - make_interval(days => p_days))
+     order by a.created_at desc;
+$$;
+
+-- ---------------------------------------------------------------------------
 -- 权限：确保 anon(Publishable Key)/authenticated 无法改写底表
 -- ---------------------------------------------------------------------------
-revoke all on table public.users, public.devices, public.health_snapshots from anon, authenticated;
+revoke all on table public.users, public.devices, public.health_snapshots, public.assessments from anon, authenticated;
 
 -- 确保函数可被客户端调用（默认 PUBLIC EXECUTE；这里显式保证）
 grant execute on function public.register_device(text, text, text) to anon, authenticated;
@@ -267,3 +362,8 @@ grant execute on function public.upload_snapshot(
 grant execute on function public.get_device_status(uuid, text) to anon, authenticated;
 grant execute on function public.get_user_devices(text) to anon, authenticated;
 grant execute on function public.get_health_snapshots(text, int, uuid) to anon, authenticated;
+grant execute on function public.submit_assessment(
+    text, jsonb, int, int, int, int, boolean, jsonb, uuid, text
+) to anon, authenticated;
+grant execute on function public.get_latest_assessment(text) to anon, authenticated;
+grant execute on function public.get_assessments(text, int) to anon, authenticated;
